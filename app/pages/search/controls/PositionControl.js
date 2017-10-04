@@ -1,29 +1,114 @@
 import classnames from 'classnames';
 import React, { PropTypes } from 'react';
+import Badge from 'react-bootstrap/lib/Badge';
 import Button from 'react-bootstrap/lib/Button';
 import Glyphicon from 'react-bootstrap/lib/Glyphicon';
+import Modal from 'react-bootstrap/lib/Modal';
+import Toggle from 'react-toggle';
+import Slider from 'rc-slider';
+
+import { injectT } from 'i18n';
 
 class PositionControl extends React.Component {
   static propTypes = {
     geolocated: PropTypes.bool,
+    onConfirm: PropTypes.func.isRequired,
     onPositionSwitch: PropTypes.func.isRequired,
+    t: PropTypes.func.isRequired,
+    value: PropTypes.number,
   };
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      distance: this.props.value || 51000,
+      maxDistance: 50000,
+      step: 1000,
+      toggled: this.props.geolocated,
+      visible: false,
+    };
+  }
+
+  getOption(value) {
+    return { label: String(value), value };
+  }
+
+  hideModal = () => {
+    this.setState({ visible: false });
+  }
+
+  showModal = () => {
+    this.setState({ visible: true });
+  }
+
+  handleToggleChange = (e) => {
+    this.setState({ toggled: e.target.checked });
+    this.props.onPositionSwitch(e);
+  }
+
+  handleDistanceSliderChange = (value) => {
+    this.setState({ distance: value });
+  }
+
+  handleConfirm = (value) => {
+    if (value > this.state.maxDistance) {
+      this.props.onConfirm('');
+    } else {
+      this.props.onConfirm(value);
+    }
+    this.hideModal();
+  }
+
   render() {
-    const { geolocated } = this.props;
+    const { t, geolocated } = this.props;
     return (
       <div className="app-PositionControl">
         <Button
           className={classnames('app-PositionControl__show-button', {
             'app-PositionControl__active': geolocated,
           })}
-          onClick={this.props.onPositionSwitch}
+          onClick={this.showModal}
         >
           <Glyphicon glyph="map-marker" />
         </Button>
+        <Modal
+          dialogClassName="app-PositionControl__modal"
+          onHide={this.hideModal}
+          show={this.state.visible}
+        >
+          <div className="app-PositionControl__modal-header">
+            <h2>
+              <label htmlFor="geolocation-status">
+                <span>{t('PositionControl.header')}</span>
+                <Toggle
+                  className="app-PositionControl__geolocation-toggle"
+                  defaultChecked={geolocated}
+                  id="geolocation-status"
+                  onChange={this.handleToggleChange}
+                />
+              </label>
+            </h2>
+          </div>
+          {this.state.toggled &&
+            <div className="app-PositionControl__modal-content">
+              { this.state.distance > this.state.maxDistance ?
+                <Badge>{t('PositionControl.noDistanceLimit')}</Badge> :
+                  <Badge>{`${this.state.distance / 1000} Km`}</Badge>
+              }
+              <Slider
+                max={this.state.maxDistance + this.state.step}
+                min={0}
+                onAfterChange={this.handleConfirm}
+                onChange={this.handleDistanceSliderChange}
+                step={this.state.step}
+                value={this.state.distance}
+              />
+            </div>
+          }
+        </Modal>
       </div>
     );
   }
 }
 
-export default PositionControl;
+export default injectT(PositionControl);

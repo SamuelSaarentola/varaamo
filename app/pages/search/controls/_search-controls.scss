@@ -115,6 +115,14 @@
       font-size: 1.5em;
     }
   }
+
+  &__modal {
+    @include search-control-modal($copper);
+    .app-PositionControl__geolocation-toggle {
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+  }
 }
 
 
