@@ -1,13 +1,15 @@
 import classnames from 'classnames';
 import React, { PropTypes } from 'react';
-import Badge from 'react-bootstrap/lib/Badge';
 import Button from 'react-bootstrap/lib/Button';
 import Glyphicon from 'react-bootstrap/lib/Glyphicon';
 import Modal from 'react-bootstrap/lib/Modal';
 import Toggle from 'react-toggle';
-import Slider from 'rc-slider';
+import { createSliderWithTooltip } from 'rc-slider';
+import Slider from 'rc-slider/lib/Slider';
 
 import { injectT } from 'i18n';
+
+const TooltipSlider = createSliderWithTooltip(Slider);
 
 class PositionControl extends React.Component {
   static propTypes = {
@@ -21,8 +23,8 @@ class PositionControl extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      distance: this.props.value || 51000,
-      maxDistance: 50000,
+      distance: this.props.value || 21000,
+      maxDistance: 20000,
       step: 1000,
       toggled: this.props.geolocated,
       visible: false,
@@ -59,6 +61,12 @@ class PositionControl extends React.Component {
     this.hideModal();
   }
 
+  tipFormatter = value => (
+    value > this.state.maxDistance ?
+    this.props.t('PositionControl.noDistanceLimit') :
+    `${value / 1000} Km`
+  );
+
   render() {
     const { t, geolocated } = this.props;
     return (
@@ -89,22 +97,20 @@ class PositionControl extends React.Component {
               </label>
             </h2>
           </div>
-          {this.state.toggled &&
-            <div className="app-PositionControl__modal-content">
-              { this.state.distance > this.state.maxDistance ?
-                <Badge>{t('PositionControl.noDistanceLimit')}</Badge> :
-                  <Badge>{`${this.state.distance / 1000} Km`}</Badge>
-              }
-              <Slider
-                max={this.state.maxDistance + this.state.step}
-                min={0}
-                onAfterChange={this.handleConfirm}
-                onChange={this.handleDistanceSliderChange}
-                step={this.state.step}
-                value={this.state.distance}
-              />
-            </div>
-          }
+          <div className="app-PositionControl__modal-content">
+            <TooltipSlider
+              className="app-PositionControl__distance_slider"
+              disabled={!this.state.toggled}
+              max={this.state.maxDistance + this.state.step}
+              min={0}
+              onAfterChange={this.handleConfirm}
+              onChange={this.handleDistanceSliderChange}
+              step={this.state.step}
+              tipFormatter={this.tipFormatter}
+              tipProps={{ overlayClassName: 'app-PositionControl__distance_slider_tooltip' }}
+              value={this.state.distance}
+            />
+          </div>
         </Modal>
       </div>
     );

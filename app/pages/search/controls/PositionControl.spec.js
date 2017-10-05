@@ -4,7 +4,6 @@ import Button from 'react-bootstrap/lib/Button';
 import Modal from 'react-bootstrap/lib/Modal';
 import simple from 'simple-mock';
 import Toggle from 'react-toggle';
-import Slider from 'rc-slider';
 
 import { shallowWithIntl } from 'utils/testUtils';
 import PositionControl from './PositionControl';
@@ -60,22 +59,24 @@ describe('pages/search/controls/PositionControl', () => {
       expect(modal.prop('onChange')).to.equal(wrapper.instance().handleToggleChange);
     });
 
-    it('does not render a slider if geolocation toggle is off', () => {
-      const wrapper = getWrapper();
-      const modal = wrapper.find(Slider);
-      expect(modal).to.have.length(0);
-    });
-
     it('renders a slider with correct props if geolocation toggle is on', () => {
       const wrapper = getWrapper({ geolocated: true });
-      const modal = wrapper.find(Slider);
+      const modal = wrapper.find('.app-PositionControl__distance_slider');
       expect(modal).to.have.length(1);
-      expect(modal.prop('max')).to.equal(51000);
+      expect(modal.prop('disabled')).to.be.false;
+      expect(modal.prop('max')).to.equal(21000);
       expect(modal.prop('min')).to.equal(0);
       expect(modal.prop('onAfterChange')).to.equal(wrapper.instance().handleConfirm);
       expect(modal.prop('onChange')).to.equal(wrapper.instance().handleDistanceSliderChange);
       expect(modal.prop('step')).to.equal(1000);
-      expect(modal.prop('value')).to.equal(51000);
+      expect(modal.prop('value')).to.equal(21000);
+    });
+
+    it('renders a disabled slider if geolocation toggle is off', () => {
+      const wrapper = getWrapper();
+      const modal = wrapper.find('.app-PositionControl__distance_slider');
+      expect(modal).to.have.length(1);
+      expect(modal.prop('disabled')).to.be.true;
     });
   });
 
@@ -129,7 +130,7 @@ describe('pages/search/controls/PositionControl', () => {
   describe('handleDistanceSliderChange', () => {
     it('sets distance state', () => {
       const instance = getWrapper().instance();
-      expect(instance.state.distance).to.equal(51000);
+      expect(instance.state.distance).to.equal(21000);
       const value = 100;
       instance.handleDistanceSliderChange(value);
       expect(instance.state.distance).to.equal(value);
